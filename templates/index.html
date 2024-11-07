@@ -42,7 +42,6 @@
     </div>
 
     <script>
-        // Your existing JavaScript for messages
         function sendMessage(event) {
             event.preventDefault();
             
@@ -63,6 +62,8 @@
                 if (data.status === 'success') {
                     messageInput.value = '';
                     updateMessages();
+                } else if (data.error) {
+                    alert(data.error);
                 }
             })
             .catch(error => console.error('Error:', error));
@@ -84,8 +85,11 @@
             });
         }
 
-        // Update messages every 2 seconds
-        setInterval(updateMessages, 2000);
+        // Update messages every 1 second (increased from 2 seconds)
+        setInterval(updateMessages, 1000);
+
+        // Initial load of messages
+        updateMessages();
 
         // Theme switcher
         const toggleSwitch = document.querySelector('#checkbox');

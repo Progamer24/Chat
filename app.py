@@ -23,6 +23,11 @@ messages = deque(maxlen=100)  # Stores last 100 messages
 # Admin IPs (set this in Railway environment variables)
 ADMIN_IPS = os.environ.get('ADMIN_IPS', '').split(',')
 
+# Add these lists to store banned and muted users
+banned_users = set()
+muted_users = set()
+active_users = set()
+
 @app.route('/')
 def home():
     if 'username' not in session:
@@ -49,12 +54,18 @@ def send_message():
     if 'username' not in session:
         return jsonify({'error': 'Not logged in'}), 401
     
+    username = session['username']
+    if username in banned_users:
+        return jsonify({'error': 'You are banned'}), 403
+    if username in muted_users:
+        return jsonify({'error': 'You are muted'}), 403
+    
     content = request.form.get('message')
     if not content:
         return jsonify({'error': 'Empty message'}), 400
 
     message = {
-        'username': session['username'],
+        'username': username,
         'content': content,
         'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'ip': request.remote_addr
@@ -96,11 +107,43 @@ def admin_panel():
     if request.remote_addr not in ADMIN_IPS:
         return redirect(url_for('home'))
     
+    # Get unique usernames from messages
+    active_users = {msg['username'] for msg in messages}
+    
     return render_template('admin.html', 
-                         active_users=dict(messages),  # This is simplified, you might want to track active users differently
-                         banned_users=[],  # Implement banned users list
-                         muted_users=[],   # Implement muted users list
+                         active_users=active_users,
+                         banned_users=banned_users,
+                         muted_users=muted_users,
                          admin_users=ADMIN_IPS)
+
+# Add these new admin routes
+@app.route('/admin/ban/<username>', methods=['POST'])
+def ban_user(username):
+    if request.remote_addr not in ADMIN_IPS:
+        return jsonify({'error': 'Unauthorized'}), 403
+    banned_users.add(username)
+    return jsonify({'status': 'success'})
+
+@app.route('/admin/unban/<username>', methods=['POST'])
+def unban_user(username):
+    if request.remote_addr not in ADMIN_IPS:
+        return jsonify({'error': 'Unauthorized'}), 403
+    banned_users.discard(username)
+    return jsonify({'status': 'success'})
+
+@app.route('/admin/mute/<username>', methods=['POST'])
+def mute_user(username):
+    if request.remote_addr not in ADMIN_IPS:
+        return jsonify({'error': 'Unauthorized'}), 403
+    muted_users.add(username)
+    return jsonify({'status': 'success'})
+
+@app.route('/admin/unmute/<username>', methods=['POST'])
+def unmute_user(username):
+    if request.remote_addr not in ADMIN_IPS:
+        return jsonify({'error': 'Unauthorized'}), 403
+    muted_users.discard(username)
+    return jsonify({'status': 'success'})
 
 # Add a link to admin panel in index.html for admin users
 
