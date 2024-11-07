@@ -1,76 +1,33 @@
+import os
 from flask import Flask, render_template, request, jsonify, session, redirect
 from datetime import datetime
 import logging
+from collections import deque
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 app = Flask(__name__)
-app.secret_key = 'your-secret-key-here'
+app.secret_key = os.environ.get('SECRET_KEY', 'your-default-secret-key')
 
-logging.basicConfig(filename='chat_access.log', level=logging.INFO)
+# Initialize storage
+messages = deque(maxlen=100)  # Store last 100 messages
+active_users = {}
+banned_users = set()
+muted_users = set()
+admin_users = {'admin'}  # Default admin user
 
-messages = []
-active_users = {}  # Store active users and their IPs
-banned_users = set()  # Store banned usernames
-muted_users = set()  # Store muted usernames
-admin_users = {'admin'}  # Default admin user, you can remove if not needed
+# Initialize rate limiter
+limiter = Limiter(
+    app,
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"]
+)
 
-# Admin functions
+# Update admin check to use environment variable for allowed IPs
+ADMIN_IPS = os.environ.get('ADMIN_IPS', '127.0.0.1').split(',')
+
 def is_admin():
-    return request.remote_addr == '127.0.0.1' or session.get('username') in admin_users
-
-@app.route('/admin')
-def admin_panel():
-    if not is_admin():
-        return redirect('/')
-    return render_template('admin.html', 
-                         active_users=active_users,
-                         banned_users=banned_users,
-                         muted_users=muted_users,
-                         admin_users=admin_users,
-                         request=request)
-
-@app.route('/admin/ban/<username>')
-def ban_user(username):
-    if not is_admin():
-        return jsonify({'status': 'error', 'message': 'Unauthorized'})
-    banned_users.add(username)
-    if username in active_users:
-        del active_users[username]
-    return jsonify({'status': 'success', 'message': f'Banned {username}'})
-
-@app.route('/admin/unban/<username>')
-def unban_user(username):
-    if not is_admin():
-        return jsonify({'status': 'error', 'message': 'Unauthorized'})
-    banned_users.discard(username)
-    return jsonify({'status': 'success', 'message': f'Unbanned {username}'})
-
-@app.route('/admin/mute/<username>')
-def mute_user(username):
-    if not is_admin():
-        return jsonify({'status': 'error', 'message': 'Unauthorized'})
-    muted_users.add(username)
-    return jsonify({'status': 'success', 'message': f'Muted {username}'})
-
-@app.route('/admin/unmute/<username>')
-def unmute_user(username):
-    if not is_admin():
-        return jsonify({'status': 'error', 'message': 'Unauthorized'})
-    muted_users.discard(username)
-    return jsonify({'status': 'success', 'message': f'Unmuted {username}'})
-
-@app.route('/admin/grant/<username>')
-def grant_admin(username):
-    if request.remote_addr != '127.0.0.1':  # Only localhost can grant admin
-        return jsonify({'status': 'error', 'message': 'Unauthorized'})
-    admin_users.add(username)
-    return jsonify({'status': 'success', 'message': f'Granted admin to {username}'})
-
-@app.route('/admin/revoke/<username>')
-def revoke_admin(username):
-    if request.remote_addr != '127.0.0.1':  # Only localhost can revoke admin
-        return jsonify({'status': 'error', 'message': 'Unauthorized'})
-    admin_users.discard(username)
-    return jsonify({'status': 'success', 'message': f'Revoked admin from {username}'})
+    return request.remote_addr in ADMIN_IPS or session.get('username') in admin_users
 
 @app.route('/')
 def index():
@@ -82,14 +39,11 @@ def index():
 def login():
     if request.method == 'POST':
         username = request.form.get('username')
-        if username:
-            if username in banned_users:
-                return "You have been banned from the chat.", 403
+        if username in banned_users:
+            return "You are banned from the chat."
+        if username and username not in active_users:
             session['username'] = username
-            ip = request.remote_addr
-            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            logging.info(f'New user joined - Username: {username}, IP: {ip}, Time: {timestamp}')
-            active_users[username] = ip
+            active_users[username] = datetime.now()
             return redirect('/')
     return render_template('login.html')
 
@@ -97,12 +51,13 @@ def login():
 def logout():
     if 'username' in session:
         username = session['username']
-        session.pop('username', None)
         if username in active_users:
             del active_users[username]
+        session.clear()
     return redirect('/login')
 
 @app.route('/send', methods=['POST'])
+@limiter.limit("2 per second")
 def send():
     if 'username' not in session:
         return jsonify({'status': 'error', 'message': 'Not logged in'})
@@ -123,14 +78,70 @@ def send():
         'username': username,
         'message': message,
         'timestamp': timestamp,
-        'is_admin': username in admin_users  # Add admin status to message
+        'is_admin': username in admin_users
     }
     messages.append(new_message)
     return jsonify({'status': 'success'})
 
 @app.route('/get_messages')
 def get_messages():
-    return jsonify(messages)
+    return jsonify(list(messages))
+
+@app.route('/admin')
+def admin_panel():
+    if not is_admin():
+        return redirect('/')
+    return render_template('admin.html', 
+                         active_users=active_users,
+                         banned_users=banned_users,
+                         muted_users=muted_users,
+                         admin_users=admin_users,
+                         request=request)
+
+@app.route('/admin/ban/<username>')
+def ban_user(username):
+    if not is_admin():
+        return jsonify({'status': 'error', 'message': 'Unauthorized'})
+    banned_users.add(username)
+    if username in active_users:
+        del active_users[username]
+    return jsonify({'status': 'success'})
+
+@app.route('/admin/unban/<username>')
+def unban_user(username):
+    if not is_admin():
+        return jsonify({'status': 'error', 'message': 'Unauthorized'})
+    banned_users.discard(username)
+    return jsonify({'status': 'success'})
+
+@app.route('/admin/mute/<username>')
+def mute_user(username):
+    if not is_admin():
+        return jsonify({'status': 'error', 'message': 'Unauthorized'})
+    muted_users.add(username)
+    return jsonify({'status': 'success'})
+
+@app.route('/admin/unmute/<username>')
+def unmute_user(username):
+    if not is_admin():
+        return jsonify({'status': 'error', 'message': 'Unauthorized'})
+    muted_users.discard(username)
+    return jsonify({'status': 'success'})
+
+@app.route('/admin/grant/<username>')
+def grant_admin(username):
+    if request.remote_addr not in ADMIN_IPS:
+        return jsonify({'status': 'error', 'message': 'Unauthorized'})
+    admin_users.add(username)
+    return jsonify({'status': 'success', 'message': f'Granted admin to {username}'})
+
+@app.route('/admin/revoke/<username>')
+def revoke_admin(username):
+    if request.remote_addr not in ADMIN_IPS:
+        return jsonify({'status': 'error', 'message': 'Unauthorized'})
+    admin_users.discard(username)
+    return jsonify({'status': 'success', 'message': f'Revoked admin from {username}'})
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    port = int(os.environ.get('PORT', 5001))
+    app.run(host='0.0.0.0', port=port)
