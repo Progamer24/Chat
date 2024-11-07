@@ -90,6 +90,20 @@ def not_found_error(error):
 def ratelimit_handler(e):
     return jsonify({'error': 'Rate limit exceeded'}), 429
 
+# Add these new routes for admin panel
+@app.route('/admin')
+def admin_panel():
+    if request.remote_addr not in ADMIN_IPS:
+        return redirect(url_for('home'))
+    
+    return render_template('admin.html', 
+                         active_users=dict(messages),  # This is simplified, you might want to track active users differently
+                         banned_users=[],  # Implement banned users list
+                         muted_users=[],   # Implement muted users list
+                         admin_users=ADMIN_IPS)
+
+# Add a link to admin panel in index.html for admin users
+
 if __name__ == '__main__':
     port = os.environ.get('PORT', 5000)
     app.run(host='0.0.0.0', port=port, debug=False)

@@ -16,6 +16,9 @@
         <div class="header">
             <h1>Welcome, {{ session.username }}!</h1>
             <div class="user-info">
+                {% if request.remote_addr in ADMIN_IPS %}
+                    <a href="{{ url_for('admin_panel') }}" class="admin-btn">Admin Panel</a>
+                {% endif %}
                 <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
             </div>
         </div>
