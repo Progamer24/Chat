@@ -68,7 +68,8 @@ def send_message():
         'username': username,
         'content': content,
         'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        'ip': request.remote_addr
+        'ip': request.remote_addr,
+        'is_admin': request.remote_addr in ADMIN_IPS
     }
     
     messages.append(message)

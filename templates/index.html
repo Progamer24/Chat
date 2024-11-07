@@ -76,7 +76,7 @@
                 const messagesDiv = document.getElementById('messages');
                 messagesDiv.innerHTML = messages.map(msg => 
                     `<div class="message">
-                        <span class="username">${msg.username}</span>
+                        <span class="username ${msg.is_admin ? 'admin-user' : ''}">${msg.username}${msg.is_admin ? ' (Admin)' : ''}</span>
                         <span class="content">${msg.content}</span>
                         <span class="timestamp">${msg.timestamp}</span>
                     </div>`

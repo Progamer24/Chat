@@ -249,3 +249,13 @@ input:checked + .slider:before {
 .dark-mode .message .admin-user {
     color: #ff80ab !important;
 }
+
+/* Add these styles for admin users */
+.admin-user {
+    color: #ff4081 !important;
+    font-weight: bold;
+}
+
+.dark-mode .admin-user {
+    color: #ff80ab !important;
+}
