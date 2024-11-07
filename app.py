@@ -195,6 +195,33 @@ def unmute_user(username):
 
 # Add a link to admin panel in index.html for admin users
 
+@app.route('/admin/data')
+def admin_data():
+    if request.remote_addr not in ADMIN_IPS:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    try:
+        # Update user_ips when messages are received
+        for msg in messages:
+            if 'username' in msg and 'ip' in msg:
+                user_ips[msg['username']] = msg['ip']
+        
+        # Get active users with their IPs
+        active_users = {}
+        for msg in messages:
+            if 'username' in msg:
+                username = msg['username']
+                active_users[username] = user_ips.get(username, 'Unknown')
+        
+        return jsonify({
+            'active_users': active_users,
+            'banned_users': list(banned_users),
+            'muted_users': list(muted_users)
+        })
+    except Exception as e:
+        app.logger.error(f"Admin data error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     port = os.environ.get('PORT', 5000)
     app.run(host='0.0.0.0', port=port, debug=False)

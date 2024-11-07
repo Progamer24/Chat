@@ -136,6 +136,59 @@
                 localStorage.setItem('theme', 'light');
             }
         });
+
+        // Function to update admin panel content
+        function updateAdminPanel() {
+            fetch('/admin/data')
+            .then(response => response.json())
+            .then(data => {
+                // Update Active Users
+                const activeUsersDiv = document.querySelector('.admin-section:nth-child(1) .user-list');
+                activeUsersDiv.innerHTML = Object.entries(data.active_users).length > 0 
+                    ? Object.entries(data.active_users).map(([user, ip]) => `
+                        <div class="user-card">
+                            <div class="user-info">
+                                <span class="username">${user}</span>
+                                <span class="user-ip">IP: ${ip}</span>
+                            </div>
+                            <div class="user-actions">
+                                <button onclick="banUser('${user}')" class="danger-btn">Ban</button>
+                                <button onclick="muteUser('${user}')" class="warning-btn">Mute</button>
+                            </div>
+                        </div>
+                    `).join('')
+                    : '<p class="no-users">No active users</p>';
+
+                // Update Banned Users
+                const bannedUsersDiv = document.querySelector('.admin-section:nth-child(2) .user-list');
+                bannedUsersDiv.innerHTML = data.banned_users.length > 0
+                    ? data.banned_users.map(user => `
+                        <div class="user-card">
+                            <span class="username">${user}</span>
+                            <button onclick="unbanUser('${user}')" class="success-btn">Unban</button>
+                        </div>
+                    `).join('')
+                    : '<p class="no-users">No banned users</p>';
+
+                // Update Muted Users
+                const mutedUsersDiv = document.querySelector('.admin-section:nth-child(3) .user-list');
+                mutedUsersDiv.innerHTML = data.muted_users.length > 0
+                    ? data.muted_users.map(user => `
+                        <div class="user-card">
+                            <span class="username">${user}</span>
+                            <button onclick="unmuteUser('${user}')" class="success-btn">Unmute</button>
+                        </div>
+                    `).join('')
+                    : '<p class="no-users">No muted users</p>';
+            })
+            .catch(error => console.error('Error updating admin panel:', error));
+        }
+
+        // Update admin panel every 2 seconds
+        setInterval(updateAdminPanel, 2000);
+
+        // Initial update
+        updateAdminPanel();
     </script>
 </body>
 </html>
