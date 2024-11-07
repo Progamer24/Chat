@@ -1,19 +1,43 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Chat Login</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
-    <div class="container">
-        <div class="login-container">
-            <h1>Join Chat</h1>
-            <form method="POST" action="/login">
-                <input type="text" name="username" placeholder="Enter your name" required>
-                <button type="submit">Join</button>
-            </form>
-        </div>
+    <div class="theme-switch-wrapper">
+        <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" />
+            <div class="slider"></div>
+        </label>
     </div>
+    <div class="login-container">
+        <h1>Login</h1>
+        <form method="POST">
+            <input type="text" name="username" placeholder="Enter username" required>
+            <button type="submit">Login</button>
+        </form>
+    </div>
+    <script>
+        // Theme switcher
+        const toggleSwitch = document.querySelector('#checkbox');
+        const currentTheme = localStorage.getItem('theme');
+
+        if (currentTheme) {
+            document.body.classList.toggle('dark-mode', currentTheme === 'dark');
+            toggleSwitch.checked = currentTheme === 'dark';
+        }
+
+        toggleSwitch.addEventListener('change', function(e) {
+            if (e.target.checked) {
+                document.body.classList.add('dark-mode');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.body.classList.remove('dark-mode');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+    </script>
 </body>
 </html>

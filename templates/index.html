@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Network Chat</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Room</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
     <div class="theme-switch-wrapper">
@@ -14,75 +14,75 @@
     </div>
     <div class="container">
         <div class="header">
-            <h1>Chat Room</h1>
+            <h1>Welcome, {{ session.username }}!</h1>
             <div class="user-info">
-                Welcome, <span class="{{ 'admin-user' if session.username in admin_users }}">{{ session.username }}{{ ' [Admin]' if session.username in admin_users }}</span>!
-                <a href="/logout" class="logout-btn">Logout</a>
+                <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
             </div>
         </div>
+        
         <div class="chat-container">
-            <div id="messages"></div>
-            <div class="input-container">
-                <input type="text" id="message" placeholder="Type your message...">
-                <button onclick="sendMessage()">Send</button>
+            <div id="messages">
+                {% for message in messages %}
+                <div class="message">
+                    <span class="username">{{ message.username }}</span>
+                    <span class="content">{{ message.content }}</span>
+                    <span class="timestamp">{{ message.timestamp }}</span>
+                </div>
+                {% endfor %}
             </div>
+            
+            <form id="messageForm" onsubmit="sendMessage(event)" class="input-container">
+                <input type="text" id="messageInput" placeholder="Type your message...">
+                <button type="submit">Send</button>
+            </form>
         </div>
     </div>
 
     <script>
-        function sendMessage() {
-            const messageInput = document.getElementById('message');
-            const message = messageInput.value.trim();
+        // Your existing JavaScript for messages
+        function sendMessage(event) {
+            event.preventDefault();
             
-            if (message) {
-                fetch('/send', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        message: message
-                    })
-                }).then(response => response.json())
-                .then(data => {
-                    if (data.status === 'error') {
-                        alert(data.message);
-                        if (data.message === 'You are banned') {
-                            window.location.href = '/login';
-                        }
-                    }
-                });
-                messageInput.value = '';
-            }
-        }
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value;
+            
+            if (!message) return;
 
-        document.getElementById('message').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
+            fetch('/send_message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `message=${encodeURIComponent(message)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    messageInput.value = '';
+                    updateMessages();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
 
         function updateMessages() {
             fetch('/get_messages')
-                .then(response => response.json())
-                .then(messages => {
-                    const messagesDiv = document.getElementById('messages');
-                    messagesDiv.innerHTML = '';
-                    messages.forEach(msg => {
-                        messagesDiv.innerHTML += `
-                            <div class="message">
-                                <span class="timestamp">[${msg.timestamp}]</span>
-                                <span class="username${msg.is_admin ? ' admin-user' : ''}">${msg.username}${msg.is_admin ? ' [Admin]' : ''}:</span>
-                                <span class="text">${msg.message}</span>
-                            </div>
-                        `;
-                    });
-                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-                });
+            .then(response => response.json())
+            .then(messages => {
+                const messagesDiv = document.getElementById('messages');
+                messagesDiv.innerHTML = messages.map(msg => 
+                    `<div class="message">
+                        <span class="username">${msg.username}</span>
+                        <span class="content">${msg.content}</span>
+                        <span class="timestamp">${msg.timestamp}</span>
+                    </div>`
+                ).join('');
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            });
         }
 
-        // Update messages every second
-        setInterval(updateMessages, 1000);
+        // Update messages every 2 seconds
+        setInterval(updateMessages, 2000);
 
         // Theme switcher
         const toggleSwitch = document.querySelector('#checkbox');

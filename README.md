@@ -10,4 +10,5 @@ A real-time chat application built with Flask featuring:
 
 ## Setup
 
-1. Clone the repository: 
+1. Clone the repository
+2. Install dependencies:
