@@ -24,10 +24,12 @@
         </div>
         
         <div class="chat-container">
-            <div id="messages">
+            <div id="messages" class="messages-container">
                 {% for message in messages %}
                 <div class="message">
-                    <span class="username">{{ message.username }}</span>
+                    <span class="username {% if message.is_admin %}admin-user{% endif %}">
+                        {{ message.username }}{% if message.is_admin %} (Admin){% endif %}
+                    </span>
                     <span class="content">{{ message.content }}</span>
                     <span class="timestamp">{{ message.timestamp }}</span>
                 </div>
@@ -46,7 +48,7 @@
             event.preventDefault();
             
             const messageInput = document.getElementById('messageInput');
-            const message = messageInput.value;
+            const message = messageInput.value.trim();
             
             if (!message) return;
 
@@ -74,18 +76,21 @@
             .then(response => response.json())
             .then(messages => {
                 const messagesDiv = document.getElementById('messages');
-                messagesDiv.innerHTML = messages.map(msg => 
-                    `<div class="message">
-                        <span class="username ${msg.is_admin ? 'admin-user' : ''}">${msg.username}${msg.is_admin ? ' (Admin)' : ''}</span>
+                messagesDiv.innerHTML = messages.map(msg => `
+                    <div class="message">
+                        <span class="username ${msg.is_admin ? 'admin-user' : ''}">
+                            ${msg.username}${msg.is_admin ? ' (Admin)' : ''}
+                        </span>
                         <span class="content">${msg.content}</span>
                         <span class="timestamp">${msg.timestamp}</span>
-                    </div>`
-                ).join('');
+                    </div>
+                `).join('');
                 messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            });
+            })
+            .catch(error => console.error('Error:', error));
         }
 
-        // Update messages every 1 second (increased from 2 seconds)
+        // Update messages every second
         setInterval(updateMessages, 1000);
 
         // Initial load of messages

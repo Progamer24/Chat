@@ -85,7 +85,15 @@ def send_message():
 def get_messages():
     if 'username' not in session:
         return jsonify({'error': 'Not logged in'}), 401
-    return jsonify(list(messages))
+    
+    # Convert deque to list and add admin status
+    message_list = []
+    for msg in messages:
+        msg_copy = msg.copy()  # Create a copy to avoid modifying original
+        msg_copy['is_admin'] = msg.get('ip') in ADMIN_IPS
+        message_list.append(msg_copy)
+    
+    return jsonify(message_list)
 
 @app.route('/clear', methods=['POST'])
 def clear_messages():

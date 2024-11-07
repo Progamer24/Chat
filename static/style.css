@@ -409,3 +409,51 @@ button {
 button:hover {
     opacity: 0.8;
 }
+
+.messages-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.message {
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    word-break: break-word;
+}
+
+.dark-mode .message {
+    background-color: #2d2d2d;
+}
+
+.message .username {
+    font-weight: bold;
+    color: #007bff;
+    margin-right: 8px;
+}
+
+.message .content {
+    color: #212529;
+}
+
+.dark-mode .message .content {
+    color: #fff;
+}
+
+.message .timestamp {
+    font-size: 0.8em;
+    color: #6c757d;
+    margin-left: 8px;
+}
+
+.admin-user {
+    color: #ff4081 !important;
+}
+
+.dark-mode .admin-user {
+    color: #ff80ab !important;
+}
