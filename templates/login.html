@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="login-container">
+            <h1>Join Chat</h1>
+            <form method="POST" action="/login">
+                <input type="text" name="username" placeholder="Enter your name" required>
+                <button type="submit">Join</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,251 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    height: 100vh;
+}
+
+.container {
+    max-width: 100%;
+    height: 100%;
+    padding: 10px;
+    margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+    .container {
+        max-width: 800px;
+    }
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-top: 50px;
+}
+
+.user-info {
+    font-size: 0.9em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.logout-btn {
+    margin-left: 10px;
+    color: #dc3545;
+    text-decoration: none;
+}
+
+.chat-container {
+    background-color: white;
+    border-radius: 5px;
+    padding: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    height: calc(100vh - 100px);
+    display: flex;
+    flex-direction: column;
+}
+
+#messages {
+    flex-grow: 1;
+    overflow-y: auto;
+    margin-bottom: 15px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.input-container {
+    display: flex;
+    gap: 10px;
+}
+
+input[type="text"] {
+    flex-grow: 1;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px; /* Better for mobile */
+}
+
+button {
+    padding: 12px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px; /* Better for mobile */
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+.message {
+    margin: 8px 0;
+    word-wrap: break-word;
+}
+
+.timestamp {
+    color: #666;
+    font-size: 0.8em;
+}
+
+.username {
+    font-weight: bold;
+    color: #007bff;
+    margin-right: 5px;
+}
+
+/* Login page styles */
+.login-container {
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.login-container h1 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.login-container form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Dark mode styles */
+body.dark-mode {
+    background-color: #1a1a1a;
+    color: #ffffff;
+}
+
+.dark-mode .chat-container,
+.dark-mode .login-container,
+.dark-mode .admin-container {
+    background-color: #2d2d2d;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+.dark-mode #messages {
+    border-color: #404040;
+    background-color: #1a1a1a;
+}
+
+.dark-mode input[type="text"] {
+    background-color: #404040;
+    border-color: #505050;
+    color: #ffffff;
+}
+
+.dark-mode .message .timestamp {
+    color: #888;
+}
+
+/* Theme toggle switch */
+.theme-switch-wrapper {
+    display: flex;
+    align-items: center;
+    position: fixed;
+    right: 10px;
+    top: 10px;
+    z-index: 1000;
+}
+
+.theme-switch {
+    display: inline-block;
+    height: 34px;
+    position: relative;
+    width: 60px;
+}
+
+.theme-switch input {
+    display: none;
+}
+
+.slider {
+    background-color: #ccc;
+    bottom: 0;
+    cursor: pointer;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    background-color: #fff;
+    bottom: 4px;
+    content: "";
+    height: 26px;
+    left: 4px;
+    position: absolute;
+    transition: .4s;
+    width: 26px;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #66bb6a;
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.dark-mode .user-info {
+    color: #ffffff;
+}
+
+@media (max-width: 480px) {
+    .header {
+        padding-top: 60px;
+    }
+    
+    .header h1 {
+        font-size: 1.5em;
+    }
+
+    .user-info {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+
+/* Update user info styles */
+.user-info {
+    font-size: 0.9em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Update admin user styles - make them more specific */
+.user-info .admin-user,
+.message .admin-user {
+    color: #ff4081 !important;
+}
+
+.dark-mode .user-info .admin-user,
+.dark-mode .message .admin-user {
+    color: #ff80ab !important;
+}
