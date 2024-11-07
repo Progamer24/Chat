@@ -259,3 +259,153 @@ input:checked + .slider:before {
 .dark-mode .admin-user {
     color: #ff80ab !important;
 }
+
+/* Admin Panel Styles */
+.admin-container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-top: 40px;
+}
+
+.back-btn {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.back-btn:hover {
+    background-color: #0056b3;
+}
+
+.admin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.admin-section {
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.user-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.user-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-ip {
+    font-size: 0.8em;
+    color: #666;
+}
+
+.user-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.danger-btn {
+    background-color: #dc3545;
+}
+
+.warning-btn {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.success-btn {
+    background-color: #28a745;
+}
+
+.no-users {
+    color: #666;
+    text-align: center;
+    padding: 20px;
+}
+
+/* Dark mode styles for admin panel */
+.dark-mode .admin-section {
+    background-color: #2d2d2d;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+.dark-mode .user-card {
+    background-color: #1a1a1a;
+}
+
+.dark-mode .user-ip {
+    color: #888;
+}
+
+.dark-mode .no-users {
+    color: #888;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .admin-container {
+        padding: 10px;
+    }
+
+    .admin-header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+
+    .user-card {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+
+    .user-actions {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .user-info {
+        align-items: center;
+    }
+}
+
+/* Update existing button styles */
+button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+    transition: opacity 0.3s;
+}
+
+button:hover {
+    opacity: 0.8;
+}

@@ -3,57 +3,139 @@
 <head>
     <title>Chat Admin Panel</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
-    <div class="container">
-        <h1>Admin Panel</h1>
+    <div class="theme-switch-wrapper">
+        <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" />
+            <div class="slider"></div>
+        </label>
+    </div>
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>Admin Panel</h1>
+            <a href="{{ url_for('home') }}" class="back-btn">Back to Chat</a>
+        </div>
         
-        <div class="section">
-            <h2>Active Users</h2>
-            {% if active_users %}
-                {% for user in active_users %}
-                <div class="user-item">
-                    <span>{{ user }}</span>
-                    <button onclick="banUser('{{ user }}')" class="danger">Ban</button>
-                    <button onclick="muteUser('{{ user }}')" class="warning">Mute</button>
+        <div class="admin-grid">
+            <div class="admin-section">
+                <h2>Active Users</h2>
+                <div class="user-list">
+                    {% if active_users %}
+                        {% for user, ip in active_users.items() %}
+                        <div class="user-card">
+                            <div class="user-info">
+                                <span class="username">{{ user }}</span>
+                                <span class="user-ip">IP: {{ ip }}</span>
+                            </div>
+                            <div class="user-actions">
+                                <button onclick="banUser('{{ user }}')" class="danger-btn">Ban</button>
+                                <button onclick="muteUser('{{ user }}')" class="warning-btn">Mute</button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="no-users">No active users</p>
+                    {% endif %}
                 </div>
-                {% endfor %}
-            {% else %}
-                <p>No active users</p>
-            {% endif %}
-        </div>
+            </div>
 
-        <div class="section">
-            <h2>Banned Users</h2>
-            {% if banned_users %}
-                {% for user in banned_users %}
-                <div class="user-item">
-                    <span>{{ user }}</span>
-                    <button onclick="unbanUser('{{ user }}')" class="success">Unban</button>
+            <div class="admin-section">
+                <h2>Banned Users</h2>
+                <div class="user-list">
+                    {% if banned_users %}
+                        {% for user in banned_users %}
+                        <div class="user-card">
+                            <span class="username">{{ user }}</span>
+                            <button onclick="unbanUser('{{ user }}')" class="success-btn">Unban</button>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="no-users">No banned users</p>
+                    {% endif %}
                 </div>
-                {% endfor %}
-            {% else %}
-                <p>No banned users</p>
-            {% endif %}
-        </div>
+            </div>
 
-        <div class="section">
-            <h2>Muted Users</h2>
-            {% if muted_users %}
-                {% for user in muted_users %}
-                <div class="user-item">
-                    <span>{{ user }}</span>
-                    <button onclick="unmuteUser('{{ user }}')" class="success">Unmute</button>
+            <div class="admin-section">
+                <h2>Muted Users</h2>
+                <div class="user-list">
+                    {% if muted_users %}
+                        {% for user in muted_users %}
+                        <div class="user-card">
+                            <span class="username">{{ user }}</span>
+                            <button onclick="unmuteUser('{{ user }}')" class="success-btn">Unmute</button>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="no-users">No muted users</p>
+                    {% endif %}
                 </div>
-                {% endfor %}
-            {% else %}
-                <p>No muted users</p>
-            {% endif %}
+            </div>
         </div>
     </div>
 
     <script>
-        // Your existing JavaScript for user management
+        // Admin actions
+        function banUser(username) {
+            fetch(`/admin/ban/${username}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') location.reload();
+            });
+        }
+
+        function unbanUser(username) {
+            fetch(`/admin/unban/${username}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') location.reload();
+            });
+        }
+
+        function muteUser(username) {
+            fetch(`/admin/mute/${username}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') location.reload();
+            });
+        }
+
+        function unmuteUser(username) {
+            fetch(`/admin/unmute/${username}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') location.reload();
+            });
+        }
+
+        // Theme switcher
+        const toggleSwitch = document.querySelector('#checkbox');
+        const currentTheme = localStorage.getItem('theme');
+
+        if (currentTheme) {
+            document.body.classList.toggle('dark-mode', currentTheme === 'dark');
+            toggleSwitch.checked = currentTheme === 'dark';
+        }
+
+        toggleSwitch.addEventListener('change', function(e) {
+            if (e.target.checked) {
+                document.body.classList.add('dark-mode');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.body.classList.remove('dark-mode');
+                localStorage.setItem('theme', 'light');
+            }
+        });
     </script>
 </body>
 </html>
