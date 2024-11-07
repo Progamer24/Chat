@@ -2,278 +2,58 @@
 <html>
 <head>
     <title>Chat Admin Panel</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <style>
-        .admin-container {
-            padding: 20px;
-        }
-        .user-list {
-            margin: 20px 0;
-        }
-        .user-item {
-            display: flex;
-            align-items: center;
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
-        }
-        .user-item button {
-            margin-left: 10px;
-        }
-        .section {
-            margin-bottom: 30px;
-        }
-        .danger {
-            background-color: #dc3545;
-        }
-        .warning {
-            background-color: #ffc107;
-            color: black;
-        }
-        .success {
-            background-color: #28a745;
-        }
-        .grant-admin-section {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-        }
-        .dark-mode .grant-admin-section {
-            background-color: #383838;
-        }
-        select {
-            padding: 10px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-            margin-right: 10px;
-        }
-        .dark-mode select {
-            background-color: #404040;
-            border-color: #505050;
-            color: #ffffff;
-        }
-        .input-container {
-            display: flex;
-            align-items: center;
-            margin-top: 10px;
-        }
-        .admin-switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 24px;
-            margin-left: 10px;
-        }
-
-        .admin-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .admin-slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 24px;
-        }
-
-        .admin-slider:before {
-            position: absolute;
-            content: "";
-            height: 16px;
-            width: 16px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        .admin-switch input:checked + .admin-slider {
-            background-color: #ff4081;
-        }
-
-        .dark-mode .admin-switch input:checked + .admin-slider {
-            background-color: #ff80ab;
-        }
-
-        .admin-switch input:checked + .admin-slider:before {
-            transform: translateX(26px);
-        }
-
-        .user-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .dark-mode .user-item {
-            border-bottom-color: #404040;
-        }
-    </style>
 </head>
 <body>
-    <div class="theme-switch-wrapper">
-        <label class="theme-switch" for="checkbox">
-            <input type="checkbox" id="checkbox" />
-            <div class="slider"></div>
-        </label>
-    </div>
-    <div class="admin-container">
+    <div class="container">
         <h1>Admin Panel</h1>
         
         <div class="section">
             <h2>Active Users</h2>
-            <div class="user-list">
-                {% for username, ip in active_users.items() %}
+            {% if active_users %}
+                {% for user in active_users %}
                 <div class="user-item">
-                    <span>{{ username }} ({{ ip }})</span>
-                    <button onclick="banUser('{{ username }}')" class="danger">Ban</button>
-                    <button onclick="muteUser('{{ username }}')" class="warning">Mute</button>
+                    <span>{{ user }}</span>
+                    <button onclick="banUser('{{ user }}')" class="danger">Ban</button>
+                    <button onclick="muteUser('{{ user }}')" class="warning">Mute</button>
                 </div>
                 {% endfor %}
-            </div>
+            {% else %}
+                <p>No active users</p>
+            {% endif %}
         </div>
 
         <div class="section">
             <h2>Banned Users</h2>
-            <div class="user-list">
-                {% for username in banned_users %}
+            {% if banned_users %}
+                {% for user in banned_users %}
                 <div class="user-item">
-                    <span>{{ username }}</span>
-                    <button onclick="unbanUser('{{ username }}')" class="success">Unban</button>
+                    <span>{{ user }}</span>
+                    <button onclick="unbanUser('{{ user }}')" class="success">Unban</button>
                 </div>
                 {% endfor %}
-            </div>
+            {% else %}
+                <p>No banned users</p>
+            {% endif %}
         </div>
 
         <div class="section">
             <h2>Muted Users</h2>
-            <div class="user-list">
-                {% for username in muted_users %}
+            {% if muted_users %}
+                {% for user in muted_users %}
                 <div class="user-item">
-                    <span>{{ username }}</span>
-                    <button onclick="unmuteUser('{{ username }}')" class="success">Unmute</button>
+                    <span>{{ user }}</span>
+                    <button onclick="unmuteUser('{{ user }}')" class="success">Unmute</button>
                 </div>
                 {% endfor %}
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>Admin Users</h2>
-            <div class="user-list">
-                {% for username in active_users.keys() %}
-                <div class="user-item">
-                    <span>{{ username }}</span>
-                    {% if request.remote_addr == '127.0.0.1' %}
-                    <label class="admin-switch">
-                        <input type="checkbox" 
-                               onchange="toggleAdmin('{{ username }}', this.checked)"
-                               {% if username in admin_users %}checked{% endif %}>
-                        <span class="admin-slider"></span>
-                    </label>
-                    {% endif %}
-                </div>
-                {% endfor %}
-            </div>
+            {% else %}
+                <p>No muted users</p>
+            {% endif %}
         </div>
     </div>
 
     <script>
-        function banUser(username) {
-            fetch(`/admin/ban/${username}`, {
-                method: 'POST'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    location.reload();
-                }
-            });
-        }
-
-        function unbanUser(username) {
-            fetch(`/admin/unban/${username}`, {
-                method: 'POST'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    location.reload();
-                }
-            });
-        }
-
-        function muteUser(username) {
-            fetch(`/admin/mute/${username}`, {
-                method: 'POST'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    location.reload();
-                }
-            });
-        }
-
-        function unmuteUser(username) {
-            fetch(`/admin/unmute/${username}`, {
-                method: 'POST'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    location.reload();
-                }
-            });
-        }
-
-        function toggleAdmin(username, isAdmin) {
-            const action = isAdmin ? 'grant' : 'revoke';
-            fetch(`/admin/${action}/${username}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'error') {
-                        alert(data.message);
-                        location.reload(); // Reset toggle if there was an error
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    location.reload(); // Reset toggle if there was an error
-                });
-        }
-
-        // Refresh the page every 10 seconds to show updates
-        setInterval(() => location.reload(), 10000);
-
-        // Theme switcher
-        const toggleSwitch = document.querySelector('#checkbox');
-        const currentTheme = localStorage.getItem('theme');
-
-        if (currentTheme) {
-            document.body.classList.toggle('dark-mode', currentTheme === 'dark');
-            toggleSwitch.checked = currentTheme === 'dark';
-        }
-
-        toggleSwitch.addEventListener('change', function(e) {
-            if (e.target.checked) {
-                document.body.classList.add('dark-mode');
-                localStorage.setItem('theme', 'dark');
-            } else {
-                document.body.classList.remove('dark-mode');
-                localStorage.setItem('theme', 'light');
-            }
-        });
+        // Your existing JavaScript for user management
     </script>
 </body>
 </html>

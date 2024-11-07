@@ -28,6 +28,9 @@ banned_users = set()
 muted_users = set()
 active_users = set()
 
+# Add this near the top with other global variables
+user_ips = {}  # Dictionary to store username -> IP mapping
+
 @app.route('/')
 def home():
     if 'username' not in session:
@@ -63,6 +66,9 @@ def send_message():
     content = request.form.get('message')
     if not content:
         return jsonify({'error': 'Empty message'}), 400
+
+    # Update user_ips when message is sent
+    user_ips[username] = request.remote_addr
 
     message = {
         'username': username,
@@ -105,17 +111,50 @@ def ratelimit_handler(e):
 # Add these new routes for admin panel
 @app.route('/admin')
 def admin_panel():
+    try:
+        if request.remote_addr not in ADMIN_IPS:
+            return redirect(url_for('home'))
+        
+        # Update user_ips when messages are received
+        for msg in messages:
+            if 'username' in msg and 'ip' in msg:
+                user_ips[msg['username']] = msg['ip']
+        
+        # Get active users with their IPs
+        active_users = {}
+        for msg in messages:
+            if 'username' in msg:
+                username = msg['username']
+                active_users[username] = user_ips.get(username, 'Unknown')
+        
+        return render_template('admin.html', 
+                             active_users=active_users,
+                             banned_users=banned_users,
+                             muted_users=muted_users,
+                             admin_users=ADMIN_IPS,
+                             request=request)  # Pass request object to template
+    except Exception as e:
+        app.logger.error(f"Admin panel error: {str(e)}")
+        return render_template('500.html'), 500
+
+# Add these routes for admin toggle functionality
+@app.route('/admin/grant/<username>')
+def grant_admin(username):
     if request.remote_addr not in ADMIN_IPS:
-        return redirect(url_for('home'))
-    
-    # Get unique usernames from messages
-    active_users = {msg['username'] for msg in messages}
-    
-    return render_template('admin.html', 
-                         active_users=active_users,
-                         banned_users=banned_users,
-                         muted_users=muted_users,
-                         admin_users=ADMIN_IPS)
+        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
+    if username in user_ips:
+        ADMIN_IPS.append(user_ips[username])
+        return jsonify({'status': 'success'})
+    return jsonify({'status': 'error', 'message': 'User not found'})
+
+@app.route('/admin/revoke/<username>')
+def revoke_admin(username):
+    if request.remote_addr not in ADMIN_IPS:
+        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 403
+    if username in user_ips and user_ips[username] in ADMIN_IPS:
+        ADMIN_IPS.remove(user_ips[username])
+        return jsonify({'status': 'success'})
+    return jsonify({'status': 'error', 'message': 'User not found or not admin'})
 
 # Add these new admin routes
 @app.route('/admin/ban/<username>', methods=['POST'])
